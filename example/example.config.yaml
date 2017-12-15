@@ -1,0 +1,36 @@
+species: arabidopsis
+assembly: tair10
+seq_info:
+  type: BS-Seq
+  mode: SE
+
+path: /home/xfu/Git/BS-Seq/fastq/sub/
+
+samples:
+  - WT
+  - ago1
+  - ago2
+
+treatment:
+  - 0
+  - 1
+  - 1
+
+versus_0:
+  - WT
+  - WT
+
+versus_1:
+  - ago1
+  - ago2
+
+cpu: 8
+
+Rscript_path: /home/xfu/R/3.3.2/bin/Rscript
+
+adapter: /home/xfu/miniconda2/envs/gmatic/share/trimmomatic/adapters/TruSeq3-PE-2.fa
+
+genome_folder: /home/xfu/Gmatic5/genome/tair10/
+
+IGV: /home/xfu/igv/genomes/tair10.genome
+

@@ -1,0 +1,16 @@
+.Rhistory
+.snakemake
+Snakefile
+bam
+clean
+fastq
+fastqc
+figures
+output
+RData
+stat
+track
+config.yaml
+download_sra.sh
+nohup.log
+
