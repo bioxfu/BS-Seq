@@ -1,0 +1,65 @@
+species: arabidopsis
+assembly: tair10
+seq_info:
+  type: BS-Seq
+  mode: PE
+
+path: /var/data/raw_data/JKZ0236/
+
+samples:
+  - 70
+  - A1
+  - A2
+  - A3
+  - B1
+  - B2
+  - B3
+  - C1
+  - C2
+  - C3
+  - R1
+  - R2
+  - R3
+
+treatment:
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 0
+  - 0
+  - 0
+
+versus_0:
+  - R1,R2,R3
+  - R1,R2,R3
+  - R1,R2,R3
+  - R1,R2,R3
+  - R1,R2,R3
+  - R1,R2,R3
+
+versus_1:
+  - "70"
+  - A1
+  - A2
+  - A3
+  - B1,B2,B3
+  - C1,C2,C3
+
+
+cpu: 8
+
+Rscript_path: /home/xfu/R/3.3.2/bin/Rscript
+
+adapter: /home/xfu/miniconda2/envs/gmatic/share/trimmomatic/adapters/TruSeq3-PE-2.fa
+
+genome_folder: /home/xfu/Gmatic5/genome/tair10/
+
+IGV: /home/xfu/igv/genomes/tair10.genome
+
