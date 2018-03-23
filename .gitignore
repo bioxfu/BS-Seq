@@ -13,4 +13,5 @@ track
 config.yaml
 download_sra.sh
 nohup.log
-
+tables
+igv.log

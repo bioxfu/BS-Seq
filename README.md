@@ -34,3 +34,5 @@ bash download_sra.sh
 ./clean.sh
 ```
 
+### install HOMER tair10 annotation
+perl /home/xfu/miniconda2/envs/gmatic/share/homer-4.9.1-5/configureHomer.pl -install tair10
