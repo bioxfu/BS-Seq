@@ -14,6 +14,7 @@ rule all:
 		expand('output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.bismark.cov.gz', sample=config['samples']),
 		expand('output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CX_report.txt.CX_report.txt.gz', sample=config['samples']),
 		expand('stat/{sample}_R1_paired_bismark_bt2_PE_report.html', sample=config['samples']),
+		expand('track/{sample}.bedGraph', sample=config['samples']),
 		expand('track/{sample}.tdf', sample=config['samples']),
 		expand('output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CpG_report.txt.gz', sample=config['samples']),
 		expand('output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHG_report.txt.gz', sample=config['samples']),
@@ -138,16 +139,23 @@ rule bismark2report:
 	shell:
 		'bismark2report --dir stat --alignment_report {input.alignment} --dedup_report {input.dedup} --splitting_report {input.splitting} --mbias_report {input.mbias} --nucleotide_report {input.nucleotide}'
 
+rule report2bedgraph:
+	input: 
+		'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CX_report.txt.CX_report.txt.gz'
+	output:
+		'track/{sample}.bedGraph'
+	shell:
+		'script/methy_bedgraph.py {input} {output}'
+
 rule bedgraph2tdf:
 	input:
-		bg = 'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.bedGraph.gz'
+		'track/{sample}.bedGraph',
 	output:
-		temp = 'track/{sample}.bedGraph',
-		tdf = 'track/{sample}.tdf'
+		'track/{sample}.tdf'
 	params:
 		IGV = config['IGV']
 	shell:
-		"zcat {input.bg} > {output.temp}; igvtools toTDF {output.temp} {output.tdf} {params.IGV}"
+		"igvtools toTDF {input} {output} {params.IGV}"
 
 rule context_type:
 	input:
