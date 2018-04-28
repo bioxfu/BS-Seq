@@ -10,20 +10,16 @@ rule all:
 		expand('fastqc/clean/{sample}_R2_paired_fastqc.html', sample=config['samples']),
 		expand('stat/fastqc_stat.tsv'),
 		expand('bam/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.bam', sample=config['samples']),
-		expand('output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.bedGraph.gz', sample=config['samples']),
-		expand('output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.bismark.cov.gz', sample=config['samples']),
-		expand('output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CX_report.txt.CX_report.txt.gz', sample=config['samples']),
 		expand('stat/{sample}_R1_paired_bismark_bt2_PE_report.html', sample=config['samples']),
-		expand('track/{sample}.bedGraph', sample=config['samples']),
-		expand('track/{sample}.tdf', sample=config['samples']),
 		expand('output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CpG_report.txt.gz', sample=config['samples']),
 		expand('output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHG_report.txt.gz', sample=config['samples']),
 		expand('output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHH_report.txt.gz', sample=config['samples']),
-		expand('figures/methylKit_QC_CpG.pdf'),
-		expand('figures/methylKit_QC_CHG.pdf'),
-		expand('figures/methylKit_QC_CHH.pdf'),
-		expand('RData/methylKit_DMR.RData'),
-		expand('tables/methylKit_DMR_anno.tsv'),
+		expand('track/{sample}.bedGraph', sample=config['samples']),
+		expand('track/{sample}.tdf', sample=config['samples']),
+		expand('figures/methylKit_PCA.pdf'),
+#		expand('RData/methylKit_DMR.RData'),
+#		expand('tables/methylKit_DMR_anno.tsv'),
+		expand('tables/DMC_fisher_test_anno.tsv'),
 
 rule fastqc_raw_PE:
 	input:
@@ -106,8 +102,8 @@ rule bismark_methylation_extractor:
 	input:
 		'bam/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.bam'
 	output:
-		bedgraph = 'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.bedGraph.gz',
-		cov = 'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.bismark.cov.gz',
+#		bedgraph = 'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.bedGraph.gz',
+#		cov = 'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.bismark.cov.gz',
 		report = 'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CX_report.txt.CX_report.txt.gz',
 		splitting = 'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated_splitting_report.txt',
 		mbias = 'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.M-bias.txt',
@@ -115,7 +111,8 @@ rule bismark_methylation_extractor:
 		genome_folder = config['genome_folder'],
 		cpu = config['cpu']
 	shell:
-		'bismark_methylation_extractor --comprehensive --CX --gzip --multicore {params.cpu} --bedGraph --cytosine_report --genome_folder {params.genome_folder} -o output {input}'
+		#'bismark_methylation_extractor --comprehensive --CX --gzip --multicore {params.cpu} --bedGraph --cytosine_report --genome_folder {params.genome_folder} -o output {input}'
+		'bismark_methylation_extractor --comprehensive --CX --gzip --multicore {params.cpu} --cytosine_report --genome_folder {params.genome_folder} -o output {input}'
 
 rule bam2nuc:
 	input:
@@ -139,24 +136,6 @@ rule bismark2report:
 	shell:
 		'bismark2report --dir stat --alignment_report {input.alignment} --dedup_report {input.dedup} --splitting_report {input.splitting} --mbias_report {input.mbias} --nucleotide_report {input.nucleotide}'
 
-rule report2bedgraph:
-	input: 
-		'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CX_report.txt.CX_report.txt.gz'
-	output:
-		'track/{sample}.bedGraph'
-	shell:
-		'script/methy_bedgraph.py {input} {output}'
-
-rule bedgraph2tdf:
-	input:
-		'track/{sample}.bedGraph',
-	output:
-		'track/{sample}.tdf'
-	params:
-		IGV = config['IGV']
-	shell:
-		"igvtools toTDF {input} {output} {params.IGV}"
-
 rule context_type:
 	input:
 		'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CX_report.txt.CX_report.txt.gz'
@@ -167,38 +146,62 @@ rule context_type:
 	shell:
 		"zcat {input}|grep -v 'CH[HG]'|gzip -c > {output.CpG}; zcat {input}|grep 'CHG'|gzip -c > {output.CHG}; zcat {input}|grep 'CHH'|gzip -c > {output.CHH}"
 
-rule methylKit_QC:
+rule report2bedgraph:
+	input: 
+		'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CX_report.txt.CX_report.txt.gz'
+	output:
+		bedgraph = 'track/{sample}.bedGraph',
+		tdf = 'track/{sample}.tdf'
+	params:
+		IGV = config['IGV']
+	shell:
+		'script/methy_bedgraph.py {input}|sort -k1,1 -k2,2n > {output.bedgraph}; igvtools toTDF {output.bedgraph} {output.tdf} {params.IGV}'
+
+rule methylKit_PCA_PE:
 	input:
 		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CpG_report.txt.gz'.format(sample=x) for x in config['samples']],
 		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHG_report.txt.gz'.format(sample=x) for x in config['samples']],
 		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHH_report.txt.gz'.format(sample=x) for x in config['samples']]
 	output:
-		'figures/methylKit_QC_CpG.pdf',
-		'figures/methylKit_QC_CHG.pdf',
-		'figures/methylKit_QC_CHH.pdf'
+		'figures/methylKit_PCA.pdf',
+		'tables/all_CpG_counts.tsv',
+		'tables/all_CHH_counts.tsv',
+		'tables/all_CHG_counts.tsv'
 	params:
 		Rscript = config['Rscript_path']
 	shell:
-		'{params.Rscript} script/methylKit_QC_PE.R'
+		'{params.Rscript} script/methylKit_PCA_PE.R'
 
-rule methylKit_DMR:
-	input:
-		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CpG_report.txt.gz'.format(sample=x) for x in config['samples']],
-		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHG_report.txt.gz'.format(sample=x) for x in config['samples']],
-		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHH_report.txt.gz'.format(sample=x) for x in config['samples']]
-	output:
-		'RData/methylKit_DMR.RData'
-	params:
-		Rscript = config['Rscript_path']
-	shell:
-		'{params.Rscript} script/methylKit_DMR_PE.R'
+#rule methylKit_DMR:
+#	input:
+#		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CpG_report.txt.gz'.format(sample=x) for x in config['samples']],
+#		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHG_report.txt.gz'.format(sample=x) for x in config['samples']],
+#		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHH_report.txt.gz'.format(sample=x) for x in config['samples']]
+#	output:
+#		'RData/methylKit_DMR.RData'
+#	params:
+#		Rscript = config['Rscript_path']
+#	shell:
+#		'{params.Rscript} script/methylKit_DMR_PE.R'
 
-rule methylKit_DMR_anno:
+#rule methylKit_DMR_anno:
+#	input:
+#		'RData/methylKit_DMR.RData'
+#	output:
+#		'tables/methylKit_DMR_anno.tsv'	
+#	params:
+#		Rscript = config['Rscript_path']
+#	shell:
+#		'{params.Rscript} script/methylKit_anno.R'
+
+rule DMC_anno:
 	input:
-		'RData/methylKit_DMR.RData'
+		'tables/all_CpG_counts.tsv',
+		'tables/all_CHH_counts.tsv',
+		'tables/all_CHG_counts.tsv'
 	output:
-		'tables/methylKit_DMR_anno.tsv'	
+		'tables/DMC_fisher_test_anno.tsv'	
 	params:
 		Rscript = config['Rscript_path']
 	shell:
-		'{params.Rscript} script/methylKit_anno.R'
+		'{params.Rscript} script/fisher_test.R'
