@@ -3,6 +3,8 @@ library(yaml)
 
 config <- yaml.load_file('config.yaml')
 context_list <- c('CpG', 'CHG', 'CHH')
+win_size <- config$win_size
+step_size <- config$step_size
 
 DMR <- list(CpG=list(), CHG=list(), CHH=list())
 
@@ -25,18 +27,20 @@ for (context in context_list) {
     # 99.9th percentile of coverage in each sample.
     filtered <- filterByCoverage(raw, lo.count=10, lo.perc=NULL, hi.count=NULL, hi.perc=99.9)
     
-    # merge all samples to one object for base-pair locations that are covered in all samples. 
-    meth <- unite(filtered)
-    
     ## DMR
     # summarize methylation information over tiling windows rather than
     # doing base-pair resolution analysis.
-    tiles <- tileMethylCounts(filtered, win.size=1000, step.size=1000)
+    tiles <- tileMethylCounts(filtered, win.size=win_size, step.size=step_size)
     meth_tiles <- unite(tiles)
     
     DMR[[context]][[i]] <- calculateDiffMeth(meth_tiles, mc.cores = 30)
     names(DMR[[context]])[i] <- paste0(control, '_vs_', treat)
+    
+    ## garbage collection
+    rm(list = c('raw', 'filtered', 'tiles', 'meth_tiles'))
+    gc()
   }
 }
 
-save(list = c('DMR'), file = 'RData/methylKit_DMR.RData')
+save(list = c('DMR'), file = paste0('RData/methylKit_DMR_w', win_size, '_s', step_size, '.RData'))
+   

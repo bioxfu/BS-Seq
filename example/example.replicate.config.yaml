@@ -52,6 +52,9 @@ versus_1:
   - B1,B2,B3
   - C1,C2,C3
 
+win_size: 200
+
+step_size: 200
 
 cpu: 8
 
