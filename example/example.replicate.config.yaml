@@ -36,25 +36,9 @@ treatment:
   - 0
   - 0
 
-versus_0:
-  - R1,R2,R3
-  - R1,R2,R3
-  - R1,R2,R3
-  - R1,R2,R3
-  - R1,R2,R3
-  - R1,R2,R3
-
-versus_1:
-  - "70"
-  - A1
-  - A2
-  - A3
-  - B1,B2,B3
-  - C1,C2,C3
-
 win_size: 200
 
-step_size: 200
+step_size: 50
 
 cpu: 8
 
@@ -66,3 +50,8 @@ genome_folder: /home/xfu/Gmatic5/genome/tair10/
 
 IGV: /home/xfu/igv/genomes/tair10.genome
 
+min_coverage: 4
+
+fisher_test:
+  treat: 70,A1,A2,A3,B,C
+  ctrl: R,R,R,R,R,R

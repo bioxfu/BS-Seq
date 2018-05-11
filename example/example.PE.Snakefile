@@ -16,10 +16,15 @@ rule all:
 		expand('output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHH_report.txt.gz', sample=config['samples']),
 		expand('track/{sample}.bedGraph', sample=config['samples']),
 		expand('track/{sample}.tdf', sample=config['samples']),
-		expand('figures/methylKit_PCA.pdf'),
-#		expand('RData/methylKit_DMR.RData'),
-#		expand('tables/methylKit_DMR_anno.tsv'),
-		expand('tables/DMC_fisher_test_anno.tsv'),
+		expand('output/bed/{sample}_{context}.bed', sample=config['samples'], context=['CpG', 'CHG', 'CHH']),
+		['figures/methylKit_PCA_{context}.pdf'.format(context=x) for x in ['CpG', 'CHG', 'CHH']],
+		['tables/methyC_windows_200_step_50_{context}_counts.tsv'.format(context=x) for x in ['CpG', 'CHG', 'CHH']],
+		['RData/fisher_test_methyC_windows_200_step_50_{context}_counts.RData'.format(context=x) for x in ['CpG', 'CHG', 'CHH']],
+		expand('tables/DMR/methyC_windows_200_step_50_{context}_DMR_{sample}.bed', sample=config['samples'], context=['CpG', 'CHG', 'CHH']),
+		expand('tables/methyC_windows_200_step_50_{context}_DMR_counts.tsv', context=['CpG', 'CHG', 'CHH']),
+		['RData/fisher_test_methyC_windows_200_step_50_{context}_DMR_counts.RData'.format(context=x) for x in ['CpG', 'CHG', 'CHH']],
+		['tables/fisher_test_methyC_windows_200_step_50_{context}_DMR_counts_anno.tsv'.format(context=x) for x in ['CpG', 'CHG', 'CHH']],
+		['figures/fisher_test_methyC_windows_200_step_50_{context}_DMR.pdf'.format(context=x) for x in ['CpG', 'CHG', 'CHH']],
 
 rule fastqc_raw_PE:
 	input:
@@ -157,51 +162,92 @@ rule report2bedgraph:
 	shell:
 		'script/methy_bedgraph.py {input}|sort -k1,1 -k2,2n > {output.bedgraph}; igvtools toTDF {output.bedgraph} {output.tdf} {params.IGV}'
 
-rule methylKit_PCA_PE:
+rule methylKit:
 	input:
 		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CpG_report.txt.gz'.format(sample=x) for x in config['samples']],
 		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHG_report.txt.gz'.format(sample=x) for x in config['samples']],
 		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHH_report.txt.gz'.format(sample=x) for x in config['samples']]
 	output:
-		'figures/methylKit_PCA.pdf',
-		'tables/all_CpG_counts.tsv',
-		'tables/all_CHH_counts.tsv',
-		'tables/all_CHG_counts.tsv'
+		'figures/methylKit_PCA_{context}.pdf',
+		'tables/methyC_windows_200_step_50_{context}_counts.tsv'
 	params:
 		Rscript = config['Rscript_path']
 	shell:
-		'{params.Rscript} script/methylKit_PCA_PE.R'
+		'{params.Rscript} script/methylKit.R'
 
-#rule methylKit_DMR:
-#	input:
-#		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CpG_report.txt.gz'.format(sample=x) for x in config['samples']],
-#		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHG_report.txt.gz'.format(sample=x) for x in config['samples']],
-#		['output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.CHH_report.txt.gz'.format(sample=x) for x in config['samples']]
-#	output:
-#		'RData/methylKit_DMR.RData'
-#	params:
-#		Rscript = config['Rscript_path']
-#	shell:
-#		'{params.Rscript} script/methylKit_DMR_PE.R'
+rule Fisher_test_windows:
+	input:
+		'tables/methyC_windows_200_step_50_{context}_counts.tsv'
+	output:
+		'RData/fisher_test_methyC_windows_200_step_50_{context}_counts.RData'
+	params:
+		Rscript = config['Rscript_path']
+	shell:
+		'{params.Rscript} script/fisher_test.R {input} {output}'
 
-#rule methylKit_DMR_anno:
-#	input:
-#		'RData/methylKit_DMR.RData'
-#	output:
-#		'tables/methylKit_DMR_anno.tsv'	
-#	params:
-#		Rscript = config['Rscript_path']
-#	shell:
-#		'{params.Rscript} script/methylKit_anno.R'
+rule merge_DMW:
+	input:
+		'RData/fisher_test_methyC_windows_200_step_50_{context}_counts.RData'
+	output:
+		'tables/methyC_windows_200_step_50_{context}_DMR.bed'
+	params:
+		Rscript = config['Rscript_path']
+	shell:
+		'{params.Rscript} script/merge_DMR.R {input} {output}'
+
+rule context_bed:
+	input:
+		'output/{sample}_R1_paired_bismark_bt2_pe_sort.deduplicated.{context}_report.txt.gz',
+	output:
+		'output/bed/{sample}_{context}.bed'
+	shell:
+		"script/context_bed.sh {input} {output}"
+
+rule DMR_meth_level:
+	input:
+		DMR='tables/methyC_windows_200_step_50_{context}_DMR.bed',
+		COVER='output/bed/{sample}_{context}.bed'
+	output:
+		'tables/DMR/methyC_windows_200_step_50_{context}_DMR_{sample}.bed'
+	threads: 10
+	shell:
+		"script/DMR_meth_level.sh {input.DMR} {input.COVER} {output}"
+
+rule merge_DMR_meth_level:
+	input:
+		['tables/DMR/methyC_windows_200_step_50_CpG_DMR_{sample}.bed'.format(sample=x) for x in config['samples']],
+		['tables/DMR/methyC_windows_200_step_50_CHG_DMR_{sample}.bed'.format(sample=x) for x in config['samples']],
+		['tables/DMR/methyC_windows_200_step_50_CHH_DMR_{sample}.bed'.format(sample=x) for x in config['samples']],
+	output:
+		'tables/methyC_windows_200_step_50_CpG_DMR_counts.tsv',
+		'tables/methyC_windows_200_step_50_CHG_DMR_counts.tsv',
+		'tables/methyC_windows_200_step_50_CHH_DMR_counts.tsv'
+	params:
+		Rscript = config['Rscript_path']
+	shell:
+		'{params.Rscript} script/merge_DMR_level_table.R'
+
+rule Fisher_test_DMR:
+	input:
+		in1='tables/methyC_windows_200_step_50_CpG_DMR_counts.tsv',
+		in2='tables/methyC_windows_200_step_50_CHG_DMR_counts.tsv',
+		in3='tables/methyC_windows_200_step_50_CHH_DMR_counts.tsv'
+	output:
+		out1='RData/fisher_test_methyC_windows_200_step_50_CpG_DMR_counts.RData',
+		out2='RData/fisher_test_methyC_windows_200_step_50_CHG_DMR_counts.RData',
+		out3='RData/fisher_test_methyC_windows_200_step_50_CHH_DMR_counts.RData'
+	params:
+		Rscript = config['Rscript_path']
+	shell:
+		'{params.Rscript} script/fisher_test.R {input.in1} {output.out1}; {params.Rscript} script/fisher_test.R {input.in2} {output.out2}; {params.Rscript} script/fisher_test.R {input.in3} {output.out3}; '
 
 rule DMC_anno:
 	input:
-		'tables/all_CpG_counts.tsv',
-		'tables/all_CHH_counts.tsv',
-		'tables/all_CHG_counts.tsv'
+		'RData/fisher_test_methyC_windows_200_step_50_{context}_DMR_counts.RData',
 	output:
-		'tables/DMC_fisher_test_anno.tsv'	
+		tab='tables/fisher_test_methyC_windows_200_step_50_{context}_DMR_counts_anno.tsv',
+		figure='figures/fisher_test_methyC_windows_200_step_50_{context}_DMR.pdf'
 	params:
 		Rscript = config['Rscript_path']
 	shell:
-		'{params.Rscript} script/fisher_test.R'
+		'{params.Rscript} script/DMR_anno.R {input} {output.tab} {output.figure}'

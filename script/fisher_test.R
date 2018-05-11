@@ -1,26 +1,30 @@
-treats <- c('70', 'A1', 'A2', 'A3', 'B', 'C')
-ctrl <- 'R'
+library(yaml)
 
-cpg <- read.table('tables/all_CpG_counts.tsv', header = T)
-chg <- read.table('tables/all_CHG_counts.tsv', header = T)
-chh <- read.table('tables/all_CHH_counts.tsv', header = T)
+config <- yaml.load_file('config.yaml')
+treats <- strsplit(config$fisher_test$treat, ',')[[1]]
+ctrls <- strsplit(config$fisher_test$ctrl, ',')[[1]]
 
-cpg$context <- 'CpG'
-chg$context <- 'CHG'
-chh$context <- 'CHH'
+argv <- commandArgs(T)
+input <- argv[1]
+output <- argv[2]
 
-meth <- rbind(cpg, chg, chh)
+meth <- read.table(input, header = T)
 
-for (treat in treats) {
-  cat('testing', treat, '....\n')
-  dfm <- data.frame(treat_Cs = rowSums(meth[grep(paste0(treat, '.+numCs'), colnames(meth))]),
-                    treat_Ts = rowSums(meth[grep(paste0(treat, '.+numTs'), colnames(meth))]),
-                    ctrl_Cs = rowSums(meth[grep(paste0(ctrl, '.+numCs'), colnames(meth))]),
-                    ctrl_Ts = rowSums(meth[grep(paste0(ctrl, '.+numTs'), colnames(meth))]))
+for (i in 1:length(treats)) {
+  treat <- treats[i]
+  ctrl <- ctrls[i]
+  cat('testing', treat, ' vs ', ctrl, '....\n')
+  dfm <- data.frame(treat_Cs = rowSums(meth[grep(paste0(treat, '.+methyCs'), colnames(meth))]),
+                    treat_Ts = rowSums(meth[grep(paste0(treat, '.+unmethyCs'), colnames(meth))]),
+                    ctrl_Cs = rowSums(meth[grep(paste0(ctrl, '.+methyCs'), colnames(meth))]),
+                    ctrl_Ts = rowSums(meth[grep(paste0(ctrl, '.+unmethyCs'), colnames(meth))]))
   mat <- as.matrix(t(dfm))
   
   p <- c()
-  for (i in 1:ncol(mat)) {
+  total <- ncol(mat)
+  pb <- txtProgressBar(min = 0, max = total, style = 3)
+  for (i in 1:total) {
+    setTxtProgressBar(pb, i)
     p[i] <- fisher.test(matrix(mat[, i],nrow=2))$p.value
   }
   p_adj <- p.adjust(p, method = 'fdr')
@@ -30,18 +34,4 @@ for (treat in treats) {
   meth[paste0(treat,'_vs_',ctrl, '_adj.pvalue')] <- round(p_adj, 4)
 }
 
-dmc <- data.frame(pos=paste0(meth$chr, ':', meth$end))
-dmc <- cbind(dmc, meth)
-dmc$chr <- sub('Chr', '', dmc$chr)
-dmc <- dmc[rowSums(dmc[,grep('_pvalue', colnames(dmc))] < 0.05) > 0, ]
-colnames(dmc) <- sub('numCs', 'methylatedCs', colnames(dmc))
-colnames(dmc) <- sub('numTs', 'unmethylatedCs', colnames(dmc))
-
-write.table(dmc[,1:5], 'tables/peaks.bed', quote = F, row.names = F, sep='\t', col.names = F)
-
-system('annotatePeaks.pl tables/peaks.bed tair10 > tables/peaks.anno')
-
-anno <- read.table('tables/peaks.anno', sep='\t', header = T, row.names = 1, quote = '', comment.char = "")
-anno <- anno[, c('Annotation', 'Detailed.Annotation', 'Distance.to.TSS', 'Nearest.PromoterID', 'Gene.Name', 'Gene.Alias', 'Gene.Description', 'Gene.Type')]
-total_result_anno <- merge(dmc[-(2:4)], anno, by.x=1, by.y=0)
-write.table(total_result_anno, 'tables/DMC_fisher_test_anno.tsv', sep='\t', row.names = F, quote = F)
+save(meth, file = output)
