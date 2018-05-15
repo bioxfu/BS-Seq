@@ -27,7 +27,7 @@ if [ $LAYOUT == SE ]; then
 	done
 elif [ $LAYOUT == PE ]; then
 	for idx in ${!SRRs[@]}; do
-		mv ${SRRs[$idx]}_R1.fastq.gz ${names[$idx]}_R1.fastq.gz
-		mv ${SRRs[$idx]}_R2.fastq.gz ${names[$idx]}_R2.fastq.gz
+		mv ${SRRs[$idx]}_1.fastq.gz ${names[$idx]}_R1.fastq.gz
+		mv ${SRRs[$idx]}_2.fastq.gz ${names[$idx]}_R2.fastq.gz
 	done
 fi
