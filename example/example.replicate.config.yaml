@@ -4,34 +4,28 @@ seq_info:
   type: BS-Seq
   mode: PE
 
-path: /var/data/raw_data/JKZ0236/
+path: /home/xfu/Project/Daisuke/Ros1/BS-Seq/fastq/
 
 samples:
-  - 70
-  - A1
-  - A2
-  - A3
-  - B1
-  - B2
-  - B3
-  - C1
-  - C2
-  - C3
-  - R1
-  - R2
-  - R3
+  - ros1_1
+  - ros1_2
+  - ros1_3
+  - ros1_4
+  - Col0_1
+  - Col0_2
+  - Col0_3
+  - Col0_4
+
+groups:
+  - ros1_
+  - Col0_
 
 treatment:
   - 1
   - 1
   - 1
   - 1
-  - 1
-  - 1
-  - 1
-  - 1
-  - 1
-  - 1
+  - 0
   - 0
   - 0
   - 0
@@ -53,5 +47,7 @@ IGV: /home/xfu/igv/genomes/tair10.genome
 min_coverage: 4
 
 fisher_test:
-  treat: 70,A1,A2,A3,B,C
-  ctrl: R,R,R,R,R,R
+  treat: ros1_
+  ctrl: Col0_
+
+fold_change: 1.5
