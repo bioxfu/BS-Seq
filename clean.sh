@@ -5,3 +5,5 @@ rm track/*.bedGraph
 rm bam/*pe.bam
 rm bam/*pe_sort.bam
 rm output/C[Hp][GH]_context*
+rm output/*bedGraph.gz
+rm output/*bismark.cov.gz

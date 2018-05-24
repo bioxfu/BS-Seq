@@ -1,7 +1,5 @@
-scp -r xfu@10.41.25.251:$1 ./
-dir=`echo $1|sed -r 's/.*\///g'`
-ls $dir/*/* |./script/rush -k 'mv {} {/%}_{%@.+_(R\d).fq.gz}.fastq.gz' --dry-run
-ls $dir/*/* |./script/rush -k 'mv {} {/%}_{%@.+_(R\d).fq.gz}.fastq.gz'
+DIR=$1
 mkdir fastq
-mv *.fastq.gz fastq
-
+scp -r xfu@10.41.25.100:$DIR ./fastq
+ls ./fastq/*/*/* |./script/rush -k 'mv {} fastq/{/%}_{%@.+_(R\d).fq.gz}.fastq.gz' --dry-run
+ls ./fastq/*/*/* |./script/rush -k 'mv {} fastq/{/%}_{%@.+_(R\d).fq.gz}.fastq.gz'

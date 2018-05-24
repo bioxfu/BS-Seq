@@ -3,9 +3,9 @@
 import sys
 import gzip
 
-cov_cutoff = 10
+cov_cutoff = int(sys.argv[1])
 
-with gzip.open(sys.argv[1], 'rb') as f:
+with gzip.open(sys.argv[2], 'rb') as f:
 	for line in f:
 		line = line.decode('utf-8')
 		lst = line.strip().split('\t')
