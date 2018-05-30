@@ -16,6 +16,7 @@ rule all:
 		expand('track/{sample}_{context}_min{min}.tdf', sample=config['samples'], context=['CpG', 'CHG', 'CHH'], min=config['min_coverage']),
 		['tables/methyC_{context}_counts.tsv'.format(context=x) for x in ['CpG', 'CHG', 'CHH']],
 		['tables/methyC_{context}_counts_filter.tsv'.format(context=x) for x in ['CpG', 'CHG', 'CHH']],
+		['figures/methyC_{context}_counts_PCA.pdf'.format(context=x) for x in ['CpG', 'CHG', 'CHH']],
 
 rule fastqc_raw_PE:
 	input:
@@ -193,3 +194,12 @@ rule min_coverage_filter:
 	shell:
 		'{params.Rscript} script/min_coverage_filter.R {input} {output}'
 
+rule methy_PCA:
+	input:
+		'tables/methyC_{context}_counts.tsv'
+	output:
+		'figures/methyC_{context}_counts_PCA.pdf'
+	params:
+		Rscript = config['Rscript_path']
+	shell:
+		'{params.Rscript} script/methy_PCA.R {input} {output}'

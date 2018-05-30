@@ -4,7 +4,7 @@ config <- yaml.load_file('config.yaml')
 cluster <- function(m) {
   x <- m$pos
   steps <- diff(x)
-  b <- which(steps > 200)
+  b <- which(steps > 100)
   
   start_idx <- c(1, b + 1)
   end_idx <- c(b, length(x))
@@ -23,6 +23,7 @@ for (context in contexts) {
   load(paste0('fisher_test/methyC_', context, '.RData'))
   
   for (x in 1:length(meth_test_all)) {
+    cat(paste(context, names(meth_test_all)[x], '....\n'))
     meth <- meth_test_all[[x]]
     meth$FDR <- p.adjust(meth[, 5])
     meth_chrom <- split(meth, meth$chrom)
@@ -46,14 +47,16 @@ for (context in contexts) {
         meth2 <- rbind(meth2, merge(new_bound, DMR, by.x=0, by.y=1))
       }
     }
-    meth2$log2FC <- round(log2(meth2$x), 4)
-    meth2 <- meth2[abs(meth2$log2FC) > log2(config$fold_change), -c(1,6)]
-    colnames(meth2)[1] <- 'chrom'
-    meth2$DMR_size <- as.numeric(as.vector(meth2$DMR_end)) - as.numeric(as.vector(meth2$DMR_start)) + 1
-    meth2$direction <- meth2$log2FC
-    meth2$direction[meth2$log2FC > 0] <- 'up'
-    meth2$direction[meth2$log2FC < 0] <- 'down'
-    write.table(meth2, paste0('tables/DMR_', gsub('_+', '.', names(meth_test_all)), context, '.tsv'), row.names = F, sep='\t', quote = F)
+    if (!is.null(meth2)) {
+      meth2$log2FC <- round(log2(meth2$x), 4)
+      meth2 <- meth2[abs(meth2$log2FC) > log2(config$fold_change), -c(1,6)]
+      colnames(meth2)[1] <- 'chrom'
+      meth2$DMR_size <- as.numeric(as.vector(meth2$DMR_end)) - as.numeric(as.vector(meth2$DMR_start)) + 1
+      meth2$direction <- meth2$log2FC
+      meth2$direction[meth2$log2FC > 0] <- 'up'
+      meth2$direction[meth2$log2FC < 0] <- 'down'
+    }
+    write.table(meth2, paste0('tables/', context, '_DMR_', gsub('_+', '.', names(meth_test_all)[x]), '.tsv'), row.names = F, sep='\t', quote = F)
   }
 }
 

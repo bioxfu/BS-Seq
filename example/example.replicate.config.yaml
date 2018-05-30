@@ -3,36 +3,61 @@ assembly: tair10
 seq_info:
   type: BS-Seq
   mode: PE
+  replicate: 2
 
-path: /home/xfu/Project/Daisuke/Ros1/BS-Seq/fastq/
+path: /data1/Rosa/BS-Seq/fastq/
 
 samples:
-  - ros1_1
-  - ros1_2
-  - ros1_3
-  - ros1_4
-  - Col0_1
-  - Col0_2
-  - Col0_3
-  - Col0_4
+  - No_1
+  - No_2
+  - No_3
+  - No_4
+  - No_5
+  - No_6
+  - No_7
+  - No_8
+  - No_9
+  - No_10
+  - No_11
+  - No_12
+  - No_13
+  - No_14
+  - No_15
+  - No_16
+  - No_17
+  - No_18
+  - No_19
+  - No_20
+  - No_21
+  - No_22
+  - No_23
+  - No_24
 
 groups:
-  - ros1_
-  - Col0_
-
-treatment:
-  - 1
-  - 1
-  - 1
-  - 1
-  - 0
-  - 0
-  - 0
-  - 0
-
-win_size: 200
-
-step_size: 50
+  - TYLCV_WT
+  - TYLCV_WT
+  - TYLCV_ago4-5
+  - TYLCV_ago4-5
+  - TYLCV_35S-V2-L3
+  - TYLCV_35S-V2-L3
+  - TYLCV_35S-V2-L15
+  - TYLCV_35S-V2-L15
+  - TYLCV-V2mut1_WT
+  - TYLCV-V2mut1_WT
+  - TYLCV-V2mut1_ago4-5
+  - TYLCV-V2mut1_ago4-5
+  - TYLCV-V2mut1_35S-V2-L3
+  - TYLCV-V2mut1_35S-V2-L3
+  - TYLCV-V2mut1_35S-V2-L15
+  - TYLCV-V2mut1_35S-V2-L15
+  - Mock_WT
+  - Mock_WT
+  - Mock_ago4-5
+  - Mock_ago4-5
+  - Mock_35S-V2-L3
+  - Mock_35S-V2-L3
+  - Mock_35S-V2-L15
+  - Mock_35S-V2-L15
 
 cpu: 8
 
@@ -40,14 +65,14 @@ Rscript_path: /home/xfu/R/3.3.2/bin/Rscript
 
 adapter: /home/xfu/miniconda2/envs/gmatic/share/trimmomatic/adapters/TruSeq3-PE-2.fa
 
-genome_folder: /home/xfu/Gmatic5/genome/tair10/
+genome_folder: /data1/Rosa/BS-Seq/genome/
 
-IGV: /home/xfu/igv/genomes/tair10.genome
+IGV: /home/xfu/igv/genomes/tair10_TYLCV.genome
 
 min_coverage: 4
 
 fisher_test:
-  treat: ros1_
-  ctrl: Col0_
+  treat: Mock_ago4-5,Mock_35S-V2-L3,Mock_35S-V2-L15,TYLCV_WT,TYLCV_ago4-5,TYLCV_35S-V2-L3,TYLCV_35S-V2-L15,TYLCV-V2mut1_WT,TYLCV-V2mut1_ago4-5,TYLCV-V2mut1_35S-V2-L3,TYLCV-V2mut1_35S-V2-L15
+  ctrl: Mock_WT,Mock_WT,Mock_WT,Mock_WT,Mock_WT,Mock_WT,Mock_WT,Mock_WT,Mock_WT,Mock_WT,Mock_WT
 
 fold_change: 1.5

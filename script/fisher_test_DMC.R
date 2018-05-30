@@ -8,8 +8,9 @@ ctrls <- strsplit(config$fisher_test$ctrl, ',')[[1]]
 argv <- commandArgs(T)
 input <- argv[1]
 output <- argv[2]
+#input <- 'fisher_test/methyC_CpG/split_100.tsv'
 
-meth <- read.table(input, header = T)
+meth <- read.table(input, header = T, check.names = F) # prevent from changing hyphens to dots
 meth2 <- meth[1:2]
 
 meth_test <- list()

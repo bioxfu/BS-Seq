@@ -7,13 +7,15 @@ output <- argv[2]
 config <- yaml.load_file('config.yaml')
 meth <- read.table(input, header = T)
 value <- meth[-(1:2)]
+colnames(value) <- paste0(rep(config$groups, each=2), '@', colnames(value))
 
 new_value <- NULL
-for (group in config$groups) {
-  new_value <- cbind(new_value, rowSums(value[, grep(group, grep('\\.methyCs', colnames(value), value = T), value = T)]))
-  new_value <- cbind(new_value, rowSums(value[, grep(group, grep('\\.unmethyCs', colnames(value), value = T), value = T)]))
+uniq_group <- unique(config$groups)
+for (group in uniq_group) {
+  new_value <- cbind(new_value, rowSums(value[, grep(paste0(group,'@'), grep('\\.methyCs', colnames(value), value = T), value = T)]))
+  new_value <- cbind(new_value, rowSums(value[, grep(paste0(group,'@'), grep('\\.unmethyCs', colnames(value), value = T), value = T)]))
 }
-colnames(new_value) <- paste0(rep(config$groups, each=2), c('.methyCs', '.unmethyCs'))
+colnames(new_value) <- paste0(rep(uniq_group, each=2), c('.methyCs', '.unmethyCs'))
 new_meth <- cbind(meth[1:2], new_value)
 
 coverage <- NULL

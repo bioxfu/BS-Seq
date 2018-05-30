@@ -12,3 +12,6 @@ Rscript script/combine_fisher_parallel.R
 
 Rscript script/find_DMR.R
 
+mkdir tables/anno
+rm tables/*.tmp.*
+find tables/*DMR*|./script/rush -k 'Rscript script/DMR_anno.R {} tables/anno/{%}'
