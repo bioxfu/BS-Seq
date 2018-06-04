@@ -4,8 +4,8 @@ library(yaml)
 argv <- commandArgs(T)
 input <- argv[1]
 output <- argv[2]
-#input <- 'tables/methyC_CpG_counts.tsv'
-#output <- 'figures/methyC_CpG_counts_PCA.pdf'
+#input <- 'tables/methyC_CHH_counts.tsv'
+#output <- 'figures/methyC_CHH_counts_PCA.pdf'
 
 config <- yaml.load_file('config.yaml')
 meth <- read.table(input, header = T)
@@ -28,7 +28,9 @@ for (i in 1:length(idx)) {
 rownames(meth_ratio) <- rownames(value)
 colnames(meth_ratio) <- config$samples
 
-pca <- prcomp(t(meth_ratio), center = T, scale. = T)
+meth_ratio <- t(meth_ratio)
+meth_ratio <- meth_ratio[, apply(meth_ratio, 2, sd) != 0]
+pca <- prcomp(meth_ratio, center = T, scale. = T)
 
 x <- pca$x
 prop_var <- round(summary(pca)$importance[2,1:2]*100,0)
@@ -44,7 +46,7 @@ plot(x[,1], x[,2], xlim=range(x[,1])*1.1, ylim=range(x[,2])*1.1, col=cols, cex=1
      xlab=paste0('PC1 (',prop_var[1],'% of Variance)'),
      ylab=paste0('PC2 (',prop_var[2],'% of Variance)')
 )
-text(x[,1], x[,2], colnames(meth_ratio), col=cols)
+text(x[,1], x[,2], rownames(meth_ratio), col=cols)
 par(mar=c(5,0,4,0))
 plot.new()
 legend('left', unique(config$groups), pch = 1, col=set2_cols, bty='n')
