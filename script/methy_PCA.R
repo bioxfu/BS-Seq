@@ -18,7 +18,7 @@ for (i in 1:length(idx)) {
 }
 rownames(meth_cover) <- rownames(value)
 colnames(meth_cover) <- config$samples
-filt <- rowSums(meth_cover > config$min_coverage) == ncol(meth_cover)
+filt <- rowSums(meth_cover >= config$min_coverage) == ncol(meth_cover)
 
 value <- value[filt, ] + 1
 meth_ratio <- matrix(nrow = nrow(value), ncol = length(idx))

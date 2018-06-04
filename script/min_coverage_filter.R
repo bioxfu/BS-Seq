@@ -23,7 +23,7 @@ for (i in seq(1, ncol(new_value), 2)) {
   coverage <- cbind(coverage, new_value[, i] + new_value[, i+1])
 }
 
-filt_idx <- which(rowSums(coverage > config$min_coverage) == ncol(coverage))
+filt_idx <- which(rowSums(coverage >= config$min_coverage) == ncol(coverage))
 filt_meth <- new_meth[filt_idx,]
 
 write.table(filt_meth, output, sep = '\t', quote = F, row.names = F)
