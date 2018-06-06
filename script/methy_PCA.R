@@ -4,8 +4,8 @@ library(yaml)
 argv <- commandArgs(T)
 input <- argv[1]
 output <- argv[2]
-#input <- 'tables/methyC_CHH_counts.tsv'
-#output <- 'figures/methyC_CHH_counts_PCA.pdf'
+#input <- 'tables/methyC_CpG_counts.tsv'
+#output <- 'figures/methyC_CpG_counts_PCA.pdf'
 
 config <- yaml.load_file('config.yaml')
 meth <- read.table(input, header = T)
@@ -36,7 +36,11 @@ x <- pca$x
 prop_var <- round(summary(pca)$importance[2,1:2]*100,0)
 
 set2_cols <- brewer.pal(12, 'Paired')
-cols <- rep(set2_cols, each=config$seq_info$replicate)
+cols <- NULL
+rep <- unlist(strsplit(config$seq_info$replicate, ','))
+for (r in 1:length(rep)) {
+  cols <- c(cols, rep(set2_cols[r], each=rep[r]))
+}
 
 pdf(output, hei=7, wid=7)
 layout(matrix(c(1,2),nrow=1), wid=c(5, 5))
@@ -49,6 +53,6 @@ plot(x[,1], x[,2], xlim=range(x[,1])*1.1, ylim=range(x[,2])*1.1, col=cols, cex=1
 text(x[,1], x[,2], rownames(meth_ratio), col=cols)
 par(mar=c(5,0,4,0))
 plot.new()
-legend('left', unique(config$groups), pch = 1, col=set2_cols, bty='n')
+legend('left', unique(config$groups), pch = 1, col=unique(set2_cols), bty='n')
 dev.off()
 

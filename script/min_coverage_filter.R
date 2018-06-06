@@ -12,8 +12,8 @@ colnames(value) <- paste0(rep(config$groups, each=2), '@', colnames(value))
 new_value <- NULL
 uniq_group <- unique(config$groups)
 for (group in uniq_group) {
-  new_value <- cbind(new_value, rowSums(value[, grep(paste0(group,'@'), grep('\\.methyCs', colnames(value), value = T), value = T)]))
-  new_value <- cbind(new_value, rowSums(value[, grep(paste0(group,'@'), grep('\\.unmethyCs', colnames(value), value = T), value = T)]))
+  new_value <- cbind(new_value, rowSums(value[, grep(paste0(group,'@'), grep('\\.methyCs', colnames(value), value = T), value = T), drop=FALSE]))
+  new_value <- cbind(new_value, rowSums(value[, grep(paste0(group,'@'), grep('\\.unmethyCs', colnames(value), value = T), value = T), drop=FALSE]))
 }
 colnames(new_value) <- paste0(rep(uniq_group, each=2), c('.methyCs', '.unmethyCs'))
 new_meth <- cbind(meth[1:2], new_value)
